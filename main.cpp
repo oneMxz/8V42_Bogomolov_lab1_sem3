@@ -6,6 +6,6 @@
 
 int main(int, char**){
     std::cout << "Hello, World! Version 1.0." << VERSION_PROJECT << std::endl;
-    std::cout << "test";
+    std::cout << "test programm";
     return 0;
 }
