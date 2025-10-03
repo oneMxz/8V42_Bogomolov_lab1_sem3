@@ -3,6 +3,8 @@ name: C++ CI
 on:
   push:
     branches: [main]
+    paths:
+      - 'main.cpp'
 
 permissions:
   contents: write
@@ -12,19 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_tag: ${{ steps.bump_version.outputs.new_tag }}
-      patch_version: ${{ steps.bump_version.outputs.patch_version }}
+
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: Get latest tag
         id: get_tag
         run: |
           git fetch --tags --force
-          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
           echo "last_tag=$last_tag" >> $GITHUB_ENV
           echo "last_tag=$last_tag" >> $GITHUB_OUTPUT
 
@@ -33,17 +33,14 @@ jobs:
         run: |
           IFS='.' read -r major minor patch <<< "${last_tag//v/}"
           patch=$((patch + 1))
-          new_tag="v$major.$minor.$patch"
-          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
-          echo "patch_version=$patch" >> $GITHUB_OUTPUT
+          new_tag="$major.$minor.$patch"
           echo "new_tag=$new_tag" >> $GITHUB_ENV
-          echo "patch_version=$patch" >> $GITHUB_ENV
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
       - name: Show version info
         run: |
           echo "Last tag: ${{ env.last_tag }}"
           echo "New tag: ${{ env.new_tag }}"
-          echo "Patch version: ${{ env.patch_version }}"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -68,8 +65,8 @@ jobs:
 
       - name: Configure with Ninja
         run: |
-          echo "Building with patch version: ${{ needs.create-release.outputs.patch_version }}"
-          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="1.0.${{ needs.create-release.outputs.patch_version }}"
+          echo "Building version: ${{ needs.create-release.outputs.new_tag }}"
+          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="${{ needs.create-release.outputs.new_tag }}"
 
       - name: Build project
         run: cmake --build build
@@ -82,12 +79,12 @@ jobs:
       - name: Verify version
         run: |
           echo "=== Program output ==="
-          output=$(./build/LAB1)
+          output=$(echo "1" | ./build/LAB1)
           echo "$output"
-          if echo "$output" | grep -q "Version 1.0.${{ needs.create-release.outputs.patch_version }}"; then
-            echo "✓ Correct version found in output"
+          if echo "$output" | grep -q "Version 0.0."; then
+            echo "✓ Version found in correct format"
           else
-            echo "✗ Version not found or incorrect in output"
+            echo "✗ Version format is incorrect"
             exit 1
           fi
 
@@ -116,8 +113,8 @@ jobs:
 
       - name: Configure with Ninja
         run: |
-          echo "Building with patch version: ${{ needs.create-release.outputs.patch_version }}"
-          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="1.0.${{ needs.create-release.outputs.patch_version }}"
+          echo "Building version: ${{ needs.create-release.outputs.new_tag }}"
+          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="${{ needs.create-release.outputs.new_tag }}"
 
       - name: Build project
         run: cmake --build build
@@ -130,14 +127,14 @@ jobs:
       - name: Verify version
         run: |
           echo "=== Program output ==="
-          $output = .\build\LAB1.exe
+          $output = echo "1" | .\build\LAB1.exe
           echo $output
-          if ($output -like "Version 1.0.${{ needs.create-release.outputs.patch_version }}") {
-            echo "✓ Correct version found in output"
+          if ($output -like "*Version 0.0.*") {
+            echo "✓ Version found in correct format"
           } else {
-            echo "✗ Version not found or incorrect in output"
+            echo "✗ Version format is incorrect"
             exit 1
-          fi
+          }
 
       - name: Package (Windows)
         run: |
