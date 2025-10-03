@@ -7,6 +7,6 @@
 int main(int, char**){
     int a;
     std::cout << "Hello, World! Version " << VERSION_PROJECT;
-    std::cout << "testttttt";
+    std::cout << "test";
     std::cin >> a;
 }
