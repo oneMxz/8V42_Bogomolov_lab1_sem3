@@ -17,12 +17,14 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Get latest tag
         id: get_tag
         run: |
           git fetch --tags --force
-          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
           echo "last_tag=$last_tag" >> $GITHUB_ENV
           echo "last_tag=$last_tag" >> $GITHUB_OUTPUT
 
@@ -63,8 +65,10 @@ jobs:
 
       - name: Configure with Ninja
         run: |
-          echo "Building version: ${{ needs.create-release.outputs.new_tag }}"
-          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="${{ needs.create-release.outputs.new_tag }}"
+          version_number="${{ needs.create-release.outputs.new_tag }}"
+          clean_version="${version_number#v}"
+          echo "Building version: $clean_version"
+          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="$clean_version"
 
       - name: Build project
         run: cmake --build build
@@ -77,12 +81,13 @@ jobs:
       - name: Verify version
         run: |
           echo "=== Program output ==="
-          output=$(echo "1" | ./build/LAB1)
+          output=$(./build/LAB1)
           echo "$output"
-          if echo "$output" | grep -q "Version"; then
+          if echo "$output" | grep -q "Version 1.0. "; then
             echo "✓ Version found in output"
           else
             echo "✗ Version not found in output"
+            exit 1
           fi
 
       - name: Package (Linux)
@@ -110,8 +115,10 @@ jobs:
 
       - name: Configure with Ninja
         run: |
-          echo "Building version: ${{ needs.create-release.outputs.new_tag }}"
-          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="${{ needs.create-release.outputs.new_tag }}"
+          $version = "${{ needs.create-release.outputs.new_tag }}"
+          $cleanVersion = $version.TrimStart('v')
+          echo "Building version: $cleanVersion"
+          cmake -G "Ninja" -S . -B build -DVERSION_PROJECT="$cleanVersion"
 
       - name: Build project
         run: cmake --build build
@@ -124,12 +131,13 @@ jobs:
       - name: Verify version
         run: |
           echo "=== Program output ==="
-          $output = echo "1" | .\build\LAB1.exe
+          $output = .\build\LAB1.exe
           echo $output
-          if ($output -like "*Version*") {
+          if ($output -like "*Version 1.0.*") {
             echo "✓ Version found in output"
           } else {
             echo "✗ Version not found in output"
+            exit 1
           }
 
       - name: Package (Windows)

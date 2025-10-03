@@ -5,8 +5,7 @@
 #endif
 
 int main(int, char**){
-    int a;
-    std::cout << "Hello, World! Version " << VERSION_PROJECT;
+    std::cout << "Hello, World! Version 1.0." << VERSION_PROJECT << std::endl;
     std::cout << "test";
-    std::cin >> a;
+    return 0;
 }
