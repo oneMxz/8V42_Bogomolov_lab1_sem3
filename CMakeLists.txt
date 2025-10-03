@@ -1,16 +1,20 @@
 cmake_minimum_required(VERSION 3.10.0)
-project(LAB1 VERSION 1.0.0 LANGUAGES C CXX)
+project(LAB1 LANGUAGES C CXX)
 
 if(DEFINED VERSION_PROJECT)
     add_definitions(-DVERSION_PROJECT="${VERSION_PROJECT}")
 else()
-    add_definitions(-DVERSION_PROJECT="0")
+    add_definitions(-DVERSION_PROJECT="1.0.0")
 endif()
 
 add_executable(LAB1 main.cpp)
 
 set(CPACK_PACKAGE_NAME "LAB1")
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+if(DEFINED VERSION_PROJECT)
+    set(CPACK_PACKAGE_VERSION "${VERSION_PROJECT}")
+else()
+    set(CPACK_PACKAGE_VERSION "1.0.0")
+endif()
 
 if(WIN32)
 set(CPACK_GENERATOR "ZIP")
